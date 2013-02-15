@@ -47,7 +47,9 @@
   },
   "main": "index.js",
   "scripts": {
-    "test": "EXCEPT=cradle,neo4j nodeunit test/*_test*"
+    "test": "EXCEPT=cradle,neo4j nodeunit test/*_test*",
+    "build": "_coffee -c lib/",
+    "postinstall": "npm run build"
   },
   "engines": [
     "node >= 0.4.12"
@@ -66,7 +68,7 @@
     "pg": "= 0.7.2",
     "sqlite3": ">= 2.0.18",
     "riak-js": ">= 0.4.1",
-    "neo4j": ">= 0.2.5",
+    "neo4j": "https://github.com/liadmagen/node-neo4j/archive/develop.tar.gz",
     "mongodb": ">= 0.9.9",
     "felix-couchdb": ">= 1.0.3",
     "cradle": ">= 0.6.3"
