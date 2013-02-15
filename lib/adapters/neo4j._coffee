@@ -168,7 +168,7 @@ class Neo4j
 	all: (model, filter, _) =>
 		keys = Object.keys(filter.where or {})
 		props = Object.keys(this._models[model].properties)
-		indeces = @intersect(keys, props)
+		indeces = intersect keys, props
 
 		if indeces.length > 0
 			indexProperty = indeces[0]
@@ -246,6 +246,7 @@ class Neo4j
 	intersect = (a, b) ->
 		d = {}
 		results = []
-		d[b[i]] = true for i in b
-		results.push(a[j]) if d[a[j]] for j in a
+		d[i] = true for i in b
+		for aItem, j in a
+			results.push(a[j]) if d[aItem]
 		results
