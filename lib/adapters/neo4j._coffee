@@ -49,6 +49,7 @@ class Neo4j
 			node = db.getIndexedNode cls.modelName, indexName, value, _
 			if node and node.data
 				node.data.id = node.id
+				node.data._node = node
 				return new cls(node.data)
 
 	mixClassMethods: (cls, properties) ->
@@ -139,6 +140,7 @@ class Neo4j
 		this.updateIndexes(model, node, _)
 		#map node id to the id property being sent back
 		node.data.id = node.id
+		node.data._node = node
 		return node.data
 
 	exists: (model, id, _) =>
@@ -149,11 +151,12 @@ class Neo4j
 		delete @cache[id]
 		node = this.node(id, _)
 		node.data.id = id if node and node.data
+		node.data._node = node
 
 		return @readFromDb(model, node and node.data)
 
 	readFromDb: (model, data) =>
-		return data if not data
+		return data if not data?
 		res = {}
 		props = this._models[model].properties
 		Object.keys(data).forEach((key) ->
@@ -182,10 +185,12 @@ class Neo4j
 		if indexProperty
 			nodes = @client.queryIndexedNodes(model, indexProperty, indexValue, whereQuery, _).map_(_, (_, obj) =>
 				obj.data.id = obj.id
+				obj.data._node = obj
 				return @readFromDb(model, obj.data))
 		else
 			nodes = @client.queryNodeIndex(model, whereQuery, _).map_(_, (_, obj) =>
 				obj.data.id = obj.id
+				obj.data._node = obj
 				return @readFromDb(model, obj.data))
 
 		#nodes.filter(applyFilter(filter)) if filter
