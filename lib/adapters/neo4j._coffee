@@ -161,6 +161,7 @@ class Neo4j
 		props = this._models[model].properties
 		Object.keys(data).forEach((key) ->
 			res[key] = if props[key] and props[key].type.name is 'Date' then new Date(data[key]) else data[key])
+		res._node = data._node
 		return res
 
 	destroy: (model, id, _) =>
