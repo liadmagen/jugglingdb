@@ -122,7 +122,7 @@ class Neo4j
 		@cache[node.id] = node;
 		node.index(model, 'id', node.id, _)
 		this.updateIndexes(model, node, _)
-		return node.id
+		return node
 
 	updateIndexes: (model, node, _) =>
 		props = this._models[model].properties
@@ -170,38 +170,44 @@ class Neo4j
 		delete @cache[id]
 
 	all: (model, filter, _) =>
-		keys = Object.keys(filter.where or {})
-		props = Object.keys(this._models[model].properties)
-		indeces = intersect keys, props
-
-		if indeces.length > 0
-			indexProperty = indeces[0]
-			indexValue = filter.where[indeces[0]]
-
-		whereQuery = "query="
-		whereArgs = for key, value of filter.where
-			"#{key}:#{value}"
-		whereQuery = whereQuery + whereArgs.join(' AND ')
-
-		if indexProperty
-			nodes = @client.queryIndexedNodes(model, indexProperty, indexValue, whereQuery, _).map_(_, (_, obj) =>
+		if not filter
+			nodes = @client.queryNodeIndex(model, 'id:*', _).map_(_, (_, obj) =>
 				obj.data.id = obj.id
 				obj.data._node = obj
 				return @readFromDb(model, obj.data))
 		else
-			nodes = @client.queryNodeIndex(model, whereQuery, _).map_(_, (_, obj) =>
-				obj.data.id = obj.id
-				obj.data._node = obj
-				return @readFromDb(model, obj.data))
+			keys = Object.keys(filter.where or {})
+			props = Object.keys(this._models[model].properties)
+			indeces = intersect keys, props
 
-		#nodes.filter(applyFilter(filter)) if filter
-		if filter.order
-			key = filter.order.split(' ')[0]
-			dir = filter.order.split(' ')[1]
-			nodes = nodes.sort((a, b) ->
-				return a[key] > b[key])
-			nodes = nodes.reverse() if dir is 'DESC'
-		return nodes
+			if indeces.length > 0
+				indexProperty = indeces[0]
+				indexValue = filter.where[indeces[0]]
+
+			whereQuery = "query="
+			whereArgs = for key, value of filter.where
+				"#{key}:#{value}"
+			whereQuery = whereQuery + whereArgs.join(' AND ')
+
+			if indexProperty
+				nodes = @client.queryIndexedNodes(model, indexProperty, indexValue, whereQuery, _).map_(_, (_, obj) =>
+					obj.data.id = obj.id
+					obj.data._node = obj
+					return @readFromDb(model, obj.data))
+			else
+				nodes = @client.queryNodeIndex(model, whereQuery, _).map_(_, (_, obj) =>
+					obj.data.id = obj.id
+					obj.data._node = obj
+					return @readFromDb(model, obj.data))
+
+			#nodes.filter(applyFilter(filter)) if filter
+			if filter.order
+				key = filter.order.split(' ')[0]
+				dir = filter.order.split(' ')[1]
+				nodes = nodes.sort((a, b) ->
+					return a[key] > b[key])
+				nodes = nodes.reverse() if dir is 'DESC'
+			return nodes
 
 	allNodes: (model, _) =>
 		return @client.queryNodeIndex(model, 'id:*', _)
